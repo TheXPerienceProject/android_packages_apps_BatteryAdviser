@@ -27,11 +27,13 @@ fun BatteryTheme(
     val colorScheme = when (themeMode) {
 
         ThemeMode.LIGHT -> {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                dynamicLightColorScheme(context)
-            } else {
-                lightColorScheme()
-            }
+            // Forzamos tus colores originales en el tema claro
+            lightColorScheme(
+                primary = Color(0xFF00BCD4),   // Azul (Battery Level)
+                tertiary = Color(0xFFFFA500),  // Naranja (Prediction)
+                surface = Color.White,
+                background = Color.White
+            )
         }
 
         ThemeMode.DARK -> {

@@ -26,7 +26,9 @@ fun BatteryCircle(label: String, value: String, progress: Float, color: Color) {
             )
             Text(
                 text = value,
-                fontSize = 20.sp,
+                fontSize = 16.sp,
+                lineHeight = 18.sp,
+                fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface,
                 textAlign = androidx.compose.ui.text.style.TextAlign.Center
             )
@@ -35,8 +37,8 @@ fun BatteryCircle(label: String, value: String, progress: Float, color: Color) {
         Text(
             text = label,
             fontSize = 14.sp,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+            color = MaterialTheme.colorScheme.onSurfaceVariant/*,
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center*/
         )
     }
 }
