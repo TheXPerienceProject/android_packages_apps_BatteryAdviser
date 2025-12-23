@@ -1,20 +1,84 @@
 package mx.xperience.batteryadviser.ui.theme
-
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.lightColorScheme
+import android.app.Activity
+import android.os.Build
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
+import androidx.core.view.WindowCompat
 
-private val LightColors = lightColorScheme(
-    primary = Color(0xFF006A6A),
-    secondary = Color(0xFF4A6363),
-    tertiary = Color(0xFFFFB347) // El naranja de tu imagen
-)
+enum class ThemeMode {
+    LIGHT,
+    DARK,
+    AMOLED
+}
 
 @Composable
-fun BatteryTheme(content: @Composable () -> Unit) {
+fun BatteryTheme(
+    themeMode: ThemeMode,
+    content: @Composable () -> Unit
+) {
+    val context = LocalContext.current
+
+    val colorScheme = when (themeMode) {
+
+        ThemeMode.LIGHT -> {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                dynamicLightColorScheme(context)
+            } else {
+                lightColorScheme()
+            }
+        }
+
+        ThemeMode.DARK -> {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                dynamicDarkColorScheme(context) // 🔵 dark blue default
+            } else {
+                darkColorScheme()
+            }
+        }
+
+        ThemeMode.AMOLED -> {
+            val base = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                dynamicDarkColorScheme(context)
+            } else {
+                darkColorScheme()
+            }
+
+            base.copy(
+                surface = Color.Black,
+                background = Color.Black
+            )
+        }
+    }
+
+    val view = LocalView.current
+    SideEffect {
+        val window = (view.context as Activity).window
+
+        val darkIcons = themeMode == ThemeMode.LIGHT
+        val isAmoled = themeMode == ThemeMode.AMOLED
+
+        window.statusBarColor =
+            if (isAmoled) Color.Black.toArgb()
+            else colorScheme.surface.toArgb()
+
+        window.navigationBarColor =
+            if (isAmoled) Color.Black.toArgb()
+            else colorScheme.surface.toArgb()
+
+        WindowCompat.getInsetsController(window, view).apply {
+            isAppearanceLightStatusBars = darkIcons
+            isAppearanceLightNavigationBars = darkIcons
+        }
+    }
+
     MaterialTheme(
-        colorScheme = LightColors,
+        colorScheme = colorScheme,
         content = content
     )
 }

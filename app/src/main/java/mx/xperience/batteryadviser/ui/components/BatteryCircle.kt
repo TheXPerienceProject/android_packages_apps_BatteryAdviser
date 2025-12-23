@@ -13,49 +13,30 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 @Composable
-fun BatteryCircle(
-    label: String,
-    value: String,
-    progress: Float,
-    color: Color
-) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.width(160.dp)
-    ) {
-        Box(contentAlignment = Alignment.Center, modifier = Modifier.size(140.dp)) {
-            // Círculo de fondo (el gris tenue)
-            CircularProgressIndicator(
-                progress = { 1f },
-                modifier = Modifier.fillMaxSize(),
-                color = color.copy(alpha = 0.1f),
-                strokeWidth = 10.dp,
-                strokeCap = StrokeCap.Round,
-            )
-            // Círculo de progreso real
+fun BatteryCircle(label: String, value: String, progress: Float, color: Color) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Box(contentAlignment = Alignment.Center, modifier = Modifier.size(130.dp)) {
             CircularProgressIndicator(
                 progress = { progress },
                 modifier = Modifier.fillMaxSize(),
                 color = color,
                 strokeWidth = 10.dp,
-                strokeCap = StrokeCap.Round,
+                trackColor = color.copy(alpha = 0.2f),
+                strokeCap = StrokeCap.Round
             )
-            // Texto central
             Text(
                 text = value,
-                fontSize = 22.sp,
-                fontWeight = FontWeight.Normal,
-                color = Color.Gray,
-                textAlign = TextAlign.Center,
-                lineHeight = 24.sp
+                fontSize = 20.sp,
+                color = MaterialTheme.colorScheme.onSurface,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center
             )
         }
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(8.dp))
         Text(
             text = label,
-            fontSize = 15.sp,
-            color = Color.Gray,
-            textAlign = TextAlign.Center
+            fontSize = 14.sp,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center
         )
     }
 }
