@@ -29,4 +29,12 @@ interface BatteryDao {
 
     @Query("SELECT * FROM battery_history WHERE timestamp >= :sinceTime ORDER BY timestamp ASC")
     suspend fun getHistorySince(sinceTime: Long): List<BatteryEntry>
+
+    @Query("""
+    SELECT AVG(CAST(strftime('%H', timestamp / 1000, 'unixepoch', 'localtime') AS INTEGER)) 
+    FROM battery_history 
+    WHERE level < 30 OR level > 90 
+    LIMIT 100
+""")
+    suspend fun getAverageChargeHour(): Double?
 }

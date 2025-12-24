@@ -17,6 +17,7 @@ fun SettingsScreen(
     viewModel: SettingsViewModel,
     onBack: () -> Unit
 ) {
+    val notifyEnabled by viewModel.notifyChargeEnabled.collectAsState(initial = true)
     val themeMode by viewModel.themeMode.collectAsState()
 
     Scaffold(
@@ -58,6 +59,51 @@ fun SettingsScreen(
                 title = "Dark (AMOLED)",
                 selected = themeMode == ThemeMode.AMOLED
             ) { viewModel.setThemeMode(ThemeMode.AMOLED) }
+
+            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+
+            Text(
+                "Notifications",
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.padding(16.dp),
+                color = MaterialTheme.colorScheme.primary
+            )
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { viewModel.toggleNotifyCharge(!notifyEnabled) }
+                    .padding(horizontal = 16.dp, vertical = 14.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text("Charge Reminder", style = MaterialTheme.typography.bodyLarge)
+                    Text(
+                        "Notify if battery won't reach your usual charge time",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                Switch(
+                    checked = notifyEnabled,
+                    onCheckedChange = { viewModel.toggleNotifyCharge(it) }
+                )
+            }
+            /*Button(
+                onClick = { viewModel.sendTestNotification() },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                // Solo habilitamos el botón si las notificaciones están ON en el switch
+                enabled = notifyEnabled,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                )
+            ) {
+                Text("Test Notification")
+            }*/
         }
     }
 }
