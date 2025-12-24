@@ -12,7 +12,9 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import mx.xperience.batteryadviser.R
 import mx.xperience.batteryadviser.ui.settings.SettingsViewModel
 import mx.xperience.batteryadviser.ui.theme.ThemeMode
 
@@ -36,7 +38,7 @@ fun SettingsScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Settings") },
+                title = { Text(stringResource(R.string.settings)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Navigate back")
@@ -52,21 +54,21 @@ fun SettingsScreen(
         ) {
             // Theme Section
             Text(
-                text = "Theme",
+                text = stringResource(R.string.theme),
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.padding(16.dp)
             )
 
-            ThemeOption("Automatic Mode", themeMode == ThemeMode.AUTO) { viewModel.setThemeMode(ThemeMode.AUTO) }
-            ThemeOption("Light", themeMode == ThemeMode.LIGHT) { viewModel.setThemeMode(ThemeMode.LIGHT) }
-            ThemeOption("Dark", themeMode == ThemeMode.DARK) { viewModel.setThemeMode(ThemeMode.DARK) }
-            ThemeOption("Dark (AMOLED)", themeMode == ThemeMode.AMOLED) { viewModel.setThemeMode(ThemeMode.AMOLED) }
+            ThemeOption(stringResource(R.string.automatic_mode), themeMode == ThemeMode.AUTO) { viewModel.setThemeMode(ThemeMode.AUTO) }
+            ThemeOption(stringResource(R.string.light), themeMode == ThemeMode.LIGHT) { viewModel.setThemeMode(ThemeMode.LIGHT) }
+            ThemeOption(stringResource(R.string.dark), themeMode == ThemeMode.DARK) { viewModel.setThemeMode(ThemeMode.DARK) }
+            ThemeOption(stringResource(R.string.black_amoled), themeMode == ThemeMode.AMOLED) { viewModel.setThemeMode(ThemeMode.AMOLED) }
 
             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
             // Notifications Section
             Text(
-                text = "Notifications",
+                text = stringResource(R.string.notifications),
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.padding(16.dp),
                 color = MaterialTheme.colorScheme.primary
@@ -81,9 +83,9 @@ fun SettingsScreen(
                 verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
             ) {
                 Column(modifier = Modifier.weight(1f)) {
-                    Text("Charge Reminder", style = MaterialTheme.typography.bodyLarge)
+                    Text(stringResource(R.string.charge_reminder), style = MaterialTheme.typography.bodyLarge)
                     Text(
-                        text = "Notify if battery won't reach your usual charge time",
+                        text = stringResource(R.string.notify_usual_charging),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -107,7 +109,7 @@ fun SettingsScreen(
                         contentColor = MaterialTheme.colorScheme.onSecondaryContainer
                     )
                 ) {
-                    Text("Send Test Notification")
+                    Text(stringResource(R.string.send_test_notification))
                 }
             }
         }

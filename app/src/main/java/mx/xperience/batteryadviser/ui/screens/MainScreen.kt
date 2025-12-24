@@ -17,8 +17,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import mx.xperience.batteryadviser.R
 import mx.xperience.batteryadviser.ui.BatteryViewModel
 import mx.xperience.batteryadviser.ui.components.*
 import java.text.SimpleDateFormat
@@ -68,7 +70,7 @@ fun MainScreen(
         Scaffold(
             topBar = {
                 CenterAlignedTopAppBar(
-                    title = { Text("Battery Adviser", fontWeight = androidx.compose.ui.text.font.FontWeight.Bold) },
+                    title = { Text(stringResource(R.string.app_name), fontWeight = androidx.compose.ui.text.font.FontWeight.Bold) },
                     actions = {
                         IconButton(onClick = onOpenSettings) {
                             Icon(Icons.Default.Settings, contentDescription = "Settings")
@@ -90,13 +92,15 @@ fun MainScreen(
                     horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
                     BatteryIndicator(
-                        label = "Battery Level",
+                        label = stringResource(R.string.battery_level),
                         value = "$level%",
                         progress = level / 100f,
                         color = MaterialTheme.colorScheme.primary
                     )
                     BatteryIndicator(
-                        label = if (isCharging) "TimeToFull" else "Predicted",
+                        label = if (isCharging) stringResource(R.string.timetofull) else stringResource(
+                            R.string.predicted
+                        ),
                         value = timeText,
                         progress = level / 100f,
                         color = MaterialTheme.colorScheme.tertiary
@@ -109,20 +113,27 @@ fun MainScreen(
 
                 // Área de Leyenda
                 Row(
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    ChartLegendItem("History", MaterialTheme.colorScheme.primary)
+                    ChartLegendItem(stringResource(R.string.history), MaterialTheme.colorScheme.primary)
                     Spacer(modifier = Modifier.width(16.dp))
-                    ChartLegendItem("Prediction", MaterialTheme.colorScheme.tertiary)
+                    ChartLegendItem(stringResource(R.string.prediction), MaterialTheme.colorScheme.tertiary)
                     Spacer(modifier = Modifier.width(16.dp))
 
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(modifier = Modifier.size(10.dp).drawBehind {
-                            drawCircle(color = Color(0xFF0097A7), style = Stroke(width = 2.dp.toPx()))
-                        })
+                        Box(modifier = Modifier
+                            .size(10.dp)
+                            .drawBehind {
+                                drawCircle(
+                                    color = Color(0xFF0097A7),
+                                    style = Stroke(width = 2.dp.toPx())
+                                )
+                            })
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text("Usual Charge", fontSize = 12.sp, color = Color.Gray)
+                        Text(stringResource(R.string.usual_charge), fontSize = 12.sp, color = Color.Gray)
                     }
                 }
 
@@ -131,7 +142,9 @@ fun MainScreen(
                 BatteryChart(
                     data = fullChartData,
                     usualChargingPoint = if (fullChartData.isNotEmpty()) UsualChargingPoint(8, 90f) else null,
-                    modifier = Modifier.fillMaxWidth().height(280.dp)
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(280.dp)
                 )
             }
         }

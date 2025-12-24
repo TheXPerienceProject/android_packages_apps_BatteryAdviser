@@ -13,11 +13,11 @@ import android.os.BatteryManager
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.room.Room
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import mx.xperience.batteryadviser.R
 import mx.xperience.batteryadviser.data.BatteryRepository
 import mx.xperience.batteryadviser.data.db.BatteryDatabase
 import mx.xperience.batteryadviser.data.db.BatteryEntry
@@ -46,7 +46,7 @@ class BatteryViewModel(application: Application) : AndroidViewModel(application)
     private val _batteryLevel = MutableStateFlow(0)
     val batteryLevel = _batteryLevel.asStateFlow()
 
-    private val _remainingTime = MutableStateFlow("Calculating...")
+    private val _remainingTime = MutableStateFlow( getApplication<Application>().getString(R.string.calculating))
     val remainingTime = _remainingTime.asStateFlow()
 
     private val _isCharging = MutableStateFlow(false)
@@ -133,7 +133,7 @@ class BatteryViewModel(application: Application) : AndroidViewModel(application)
             if (currentReadings.size >= 3) {
                 handleDischargingState(batteryPercent, avgCurrentMA)
             } else {
-                _remainingTime.value = "Stabilizing..."
+                _remainingTime.value = getApplication<Application>().getString(R.string.stabilizing)
             }
         }
 
@@ -170,11 +170,14 @@ class BatteryViewModel(application: Application) : AndroidViewModel(application)
      */
     private fun handleChargingState(avgCurrentMA: Double) {
         val timeToFull = batteryManager.computeChargeTimeRemaining()
+        val chargingString = getApplication<Application>().getString(R.string.charging)
+
         if (timeToFull > 0) {
             val totalHours = timeToFull.toDouble() / (1000 * 60 * 60)
-            updateTimeDisplay(totalHours, "UNTIL FULL")
+            updateTimeDisplay(totalHours,
+                getApplication<Application>().getString(R.string.until_full))
         } else {
-            _remainingTime.value = "Charging..."
+            _remainingTime.value = chargingString
             _estimatedHours.value = "--"
         }
     }
@@ -189,11 +192,15 @@ class BatteryViewModel(application: Application) : AndroidViewModel(application)
         // Apply 80% efficiency factor for realistic estimation
         val hoursRemaining = remainingMAh / (safeCurrent * 0.8)
 
+        val lastremaining = getApplication<Application>().getString(R.string.remaining_time)
+
+        val label = getApplication<Application>().getString(R.string.remaining_left)
+
         if (hoursRemaining > 150) {
-            _remainingTime.value = "Standby\nLong"
+            _remainingTime.value = lastremaining
             _estimatedHours.value = ">150h"
         } else {
-            updateTimeDisplay(hoursRemaining, "LEFT")
+            updateTimeDisplay(hoursRemaining, label)
         }
     }
 

@@ -17,6 +17,7 @@ import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.first
+import mx.xperience.batteryadviser.R
 import mx.xperience.batteryadviser.data.db.BatteryDatabase
 import mx.xperience.batteryadviser.data.BatteryLogic
 import mx.xperience.batteryadviser.data.SettingsDataStore
@@ -127,8 +128,8 @@ class BatteryMonitorService : Service() {
      */
     private fun createPersistentNotification(): Notification {
         return NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("Battery Adviser Active")
-            .setContentText("Monitoring real-time power consumption")
+            .setContentTitle(getString(R.string.battery_adviser_active))
+            .setContentText(getString(R.string.monitoring_real_time_power_consumption))
             .setSmallIcon(android.R.drawable.ic_dialog_info)
             .setOngoing(true) // Prevents user from swiping it away
             .setPriority(NotificationCompat.PRIORITY_LOW)
@@ -143,8 +144,12 @@ class BatteryMonitorService : Service() {
         val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         val warningNote = NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.stat_sys_warning)
-            .setContentTitle("Battery Alert!")
-            .setContentText("Battery won't reach your usual charge time (${usualHour.toInt()}:00).")
+            .setContentTitle(getString(R.string.battery_alert))
+            .setContentText(
+                getString(
+                    R.string.battery_won_t_reach_your_usual_charge_time_00,
+                    usualHour.toInt()
+                ))
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setDefaults(Notification.DEFAULT_ALL)
             .build()
@@ -159,10 +164,11 @@ class BatteryMonitorService : Service() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val serviceChannel = NotificationChannel(
                 CHANNEL_ID,
-                "Battery Monitoring Service",
+                getString(R.string.battery_monitoring_service),
                 NotificationManager.IMPORTANCE_LOW
             ).apply {
-                description = "Provides real-time battery analytics and predictive alerts"
+                description =
+                    getString(R.string.provides_real_time_battery_analytics_and_predictive_alerts)
             }
             val manager = getSystemService(NotificationManager::class.java)
             manager.createNotificationChannel(serviceChannel)
