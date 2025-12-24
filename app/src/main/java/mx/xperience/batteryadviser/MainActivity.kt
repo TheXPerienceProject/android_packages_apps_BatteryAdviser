@@ -12,6 +12,9 @@ import androidx.activity.compose.setContent
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.runtime.*
 import androidx.core.app.ActivityCompat
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import androidx.work.*
 import mx.xperience.batteryadviser.data.workers.BatterySyncWorker
 import mx.xperience.batteryadviser.ui.BatteryViewModel
@@ -44,10 +47,11 @@ class MainActivity : ComponentActivity() {
             val themeMode by settingsVm.themeMode.collectAsState()
 
             var showSettings by remember { mutableStateOf(false) }
+            val navController = rememberNavController()
 
             // Apply global theme based on user settings
             BatteryTheme(themeMode = themeMode) {
-                if (showSettings) {
+               /* if (showSettings) {
                     SettingsScreen(
                         viewModel = settingsVm,
                         onBack = { showSettings = false }
@@ -57,6 +61,23 @@ class MainActivity : ComponentActivity() {
                         viewModel = batteryVm,
                         onOpenSettings = { showSettings = true }
                     )
+                }*/
+                NavHost(
+                    navController = navController,
+                    startDestination = "main"
+                ) {
+                    composable("main") {
+                        MainScreen(
+                            onOpenSettings = { navController.navigate("settings") },
+                            viewModel = batteryVm
+                        )
+                    }
+                    composable("settings"){
+                        SettingsScreen(
+                            viewModel = settingsVm,
+                            onBack = { navController.popBackStack() }
+                        )
+                    }
                 }
             }
         }

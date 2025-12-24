@@ -25,7 +25,7 @@ import mx.xperience.batteryadviser.ui.theme.ThemeMode
 class SettingsViewModel(application: Application) : AndroidViewModel(application) {
 
     // Internal state for the UI theme mode
-    private val _themeMode = MutableStateFlow(ThemeMode.DARK)
+    private val _themeMode = MutableStateFlow(ThemeMode.AUTO)
     val themeMode: StateFlow<ThemeMode> = _themeMode
 
     // DataStore instance for persistent settings

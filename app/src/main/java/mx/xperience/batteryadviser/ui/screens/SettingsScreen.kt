@@ -31,6 +31,7 @@ fun SettingsScreen(
 ) {
     val notifyEnabled by viewModel.notifyChargeEnabled.collectAsState(initial = true)
     val themeMode by viewModel.themeMode.collectAsState()
+    val DEBUG = false
 
     Scaffold(
         topBar = {
@@ -56,6 +57,7 @@ fun SettingsScreen(
                 modifier = Modifier.padding(16.dp)
             )
 
+            ThemeOption("Automatic Mode", themeMode == ThemeMode.AUTO) { viewModel.setThemeMode(ThemeMode.AUTO) }
             ThemeOption("Light", themeMode == ThemeMode.LIGHT) { viewModel.setThemeMode(ThemeMode.LIGHT) }
             ThemeOption("Dark", themeMode == ThemeMode.DARK) { viewModel.setThemeMode(ThemeMode.DARK) }
             ThemeOption("Dark (AMOLED)", themeMode == ThemeMode.AMOLED) { viewModel.setThemeMode(ThemeMode.AMOLED) }
@@ -93,18 +95,20 @@ fun SettingsScreen(
             }
 
             // Diagnostic/Test Action
-            Button(
-                onClick = { viewModel.sendTestNotification() },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                enabled = notifyEnabled,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer
-                )
-            ) {
-                Text("Send Test Notification")
+            if (DEBUG) {
+                Button(
+                    onClick = { viewModel.sendTestNotification() },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    enabled = notifyEnabled,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                    )
+                ) {
+                    Text("Send Test Notification")
+                }
             }
         }
     }
