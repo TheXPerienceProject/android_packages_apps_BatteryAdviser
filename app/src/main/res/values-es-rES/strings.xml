@@ -1,2 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources></resources>
+<resources>
+    <string name="app_name">Asesor de batería</string>
+    <string name="battery_level">Nivel de batería</string>
+    <string name="timetofull">TimeToFull</string>
+    <string name="predicted">Proyectada</string>
+    <string name="history">Historial</string>
+    <string name="prediction">Predicción</string>
+    <string name="usual_charge">Carga habitual</string>
+    <string name="send_test_notification">Enviar notificación de prueba</string>
+    <string name="settings">Ajustes</string>
+    <string name="theme">Temas</string>
+    <string name="automatic_mode">Modo Automático</string>
+    <string name="light">Claro</string>
+    <string name="dark">Oscuro</string>
+    <string name="black_amoled">Negro (AMOLED)</string>
+    <string name="notifications">Notificaciones</string>
+    <string name="charge_reminder">Recordatorio de Carga</string>
+    <string name="notify_usual_charging">Notificar si la batería no alcanzará su tiempo de carga habitual</string>
+    <string name="remaining_time">En espera\nLargo</string>
+    <string name="remaining_left">RESTANTE</string>
+    <string name="charging">Cargando...</string>
+    <string name="until_full">HASTA COMPLETARSE</string>
+    <string name="stabilizing">Estabilizando...</string>
+    <string name="calculating">Calculado...</string>
+    <string name="battery_adviser_active">Asesor de batería activo</string>
+    <string name="monitoring_real_time_power_consumption">Monitoreo de consumo de energía en tiempo real</string>
+    <string name="battery_alert">¡Alerta de batería!</string>
+    <string name="battery_won_t_reach_your_usual_charge_time_00">La batería no alcanzará tu tiempo de carga habitual (%1$d:00).</string>
+    <string name="battery_monitoring_service">Servicio de monitorización de baterías</string>
+    <string name="provides_real_time_battery_analytics_and_predictive_alerts">Proporciona análisis de batería en tiempo real y alertas predecitivas</string>
+</resources>
