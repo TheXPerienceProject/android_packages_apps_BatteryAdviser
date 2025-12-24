@@ -1,0 +1,53 @@
+/*
+ * Copyright (C) 2025 The XPerience Project
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+android_app {
+    name: "BatteryAdviser",
+
+    srcs: [
+        "app/src/main/java/**/*.kt",
+        "app/src/main/java/**/*.java",
+    ],
+
+    resource_dirs: ["app/src/main/res"],
+
+    manifest: "app/src/main/AndroidManifest.xml",
+
+    sdk_version: "current",
+    product_specific: true,
+    privileged: true,
+
+    certificate: "platform",
+
+    static_libs: [
+        "androidx.core_core-ktx",
+        "androidx.appcompat_appcompat",
+        "com.google.android.material_material",
+        "androidx.compose.runtime_runtime",
+        "androidx.compose.ui_ui",
+        "androidx.compose.foundation_foundation",
+        "androidx.compose.material3_material3",
+        "androidx.compose.material_material-icons-core",
+        "androidx.compose.material_material-icons-extended",
+        "androidx.activity_activity-compose",
+        "androidx.lifecycle_lifecycle-viewmodel-compose",
+        "androidx.navigation_navigation-compose",
+        "androidx.room_room-runtime",
+        "androidx.work_work-runtime",
+        
+        // DataStore para las configuraciones
+        "androidx.datastore_datastore-preferences",
+    ],
+
+    plugins: ["androidx.room_room-compiler-plugin"],
+
+    kotlincflags: ["-Xjvm-default=all"],
+    
+    optimize: {
+        proguard_flags_files: ["app/proguard-rules.pro"],
+    },
+
+    required: ["privapp_whitelist_mx.xperience.batteryadviser"],
+}

@@ -1,0 +1,14 @@
+<!--
+    Copyright (C) 2025 The XPerience Project
+    SPDX-License-Identifier: Apache-2.0
+-->
+<?xml version="1.0" encoding="utf-8"?>
+<permissions>
+    <privapp-permissions package="mx.xperience.batteryadviser">
+        <permission name="android.permission.BATTERY_STATS"/>
+        <permission name="android.permission.READ_BATTERY_STATS"/>
+        <permission name="android.permission.FOREGROUND_SERVICE" />
+        <permission name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+        <permission name="android.permission.POST_NOTIFICATIONS" />
+    </privapp-permissions>
+</permissions>
