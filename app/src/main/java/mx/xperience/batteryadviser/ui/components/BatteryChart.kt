@@ -1,3 +1,8 @@
+/*
+ * Copyright (C) 2025 The XPerience Project
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package mx.xperience.batteryadviser.ui.components
 
 import androidx.compose.foundation.Canvas
@@ -15,11 +20,24 @@ import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
+/**
+ * Data model for a reference point on the chart indicating typical charging behavior.
+ * * @property barIndex Horizontal position based on the data list index.
+ * @property batteryLevel Vertical position representing percentage (0-100).
+ */
 data class UsualChargingPoint(
-    val barIndex: Int, // En qué posición de la lista de datos está
-    val batteryLevel: Float // A qué altura (0-100)
+    val barIndex: Int,
+    val batteryLevel: Float
 )
 
+/**
+ * A custom-drawn chart component that visualizes battery level history and future predictions.
+ * Uses low-level Canvas API for high-performance rendering of bars, grids, and labels.
+ *
+ * @param data List of [BatteryBar] objects containing telemetry and predictions.
+ * @param usualChargingPoint Optional reference point for behavioral analysis.
+ * @param modifier Layout modifiers for the chart container.
+ */
 @Composable
 fun BatteryChart(
     data: List<BatteryBar>,
@@ -27,25 +45,33 @@ fun BatteryChart(
     modifier: Modifier = Modifier
 ) {
     val textMeasurer = rememberTextMeasurer()
-    val labelStyle = TextStyle(color = Color.Gray, fontSize = 10.sp)
+    val labelStyle = TextStyle(
+        color = Color.Gray,
+        fontSize = 10.sp
+    )
 
-    // Colores del tema (Azul/Naranja en Light, Dinámicos en Dark)
+    // Theme-aware colors
     val historyColor = MaterialTheme.colorScheme.primary
     val predictionColor = MaterialTheme.colorScheme.tertiary
-    val gridColor = Color.LightGray.copy(alpha = 0.5f)
+    val gridColor = Color.LightGray.copy(alpha = 0.3f)
     val surfaceColor = MaterialTheme.colorScheme.surface
 
-    Column(modifier = modifier.fillMaxWidth().height(250.dp).padding(16.dp)) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(250.dp)
+            .padding(16.dp)
+    ) {
         Canvas(modifier = Modifier.fillMaxSize()) {
             val canvasWidth = size.width
             val canvasHeight = size.height
-            val paddingLeft = 40.dp.toPx()
-            val paddingBottom = 20.dp.toPx()
+            val paddingLeft = 45.dp.toPx()
+            val paddingBottom = 25.dp.toPx()
 
             val chartWidth = canvasWidth - paddingLeft
             val chartHeight = canvasHeight - paddingBottom
 
-            // 1. Dibujar Líneas de Guía Horizontales (0%, 20%... 100%)
+            // --- 1. Draw Horizontal Grid Lines and Y-Axis Labels ---
             val steps = 5
             for (i in 0..steps) {
                 val y = chartHeight - (i * (chartHeight / steps))
@@ -53,63 +79,68 @@ fun BatteryChart(
                     color = gridColor,
                     start = Offset(paddingLeft, y),
                     end = Offset(canvasWidth, y),
-                    strokeWidth = 1f
+                    strokeWidth = 1.dp.toPx()
                 )
-                // Etiquetas de porcentaje (0%, 20%...)
+
                 drawText(
                     textMeasurer = textMeasurer,
-                    text = "${i * 20} %",
+                    text = "${i * 20}%",
                     style = labelStyle,
-                    topLeft = Offset(0f, y - 15f)
+                    topLeft = Offset(5f, y - 15f)
                 )
             }
 
-            val barSpacing = 4.dp.toPx()
-            val barWidth = (chartWidth / data.size) - barSpacing
+            // --- 2. Render Battery Data Bars ---
+            if (data.isNotEmpty()) {
+                val barSpacing = 4.dp.toPx()
+                val barWidth = (chartWidth / data.size) - barSpacing
 
-            data.forEachIndexed { index, bar ->
-                val x = paddingLeft + (index * (barWidth + barSpacing))
-                val barHeight = (bar.value / 100f) * chartHeight
+                data.forEachIndexed { index, bar ->
+                    val x = paddingLeft + (index * (barWidth + barSpacing))
+                    val barHeight = (bar.value / 100f) * chartHeight
 
-                // Si es predicción, es un bloque ancho
-                // Si es historial, son barras delgadas
-                drawRect(
-                    color = if (bar.isPrediction) predictionColor else historyColor,
-                    topLeft = Offset(x, chartHeight - barHeight),
-                    size = Size(if (bar.isPrediction) barWidth + barSpacing else barWidth, barHeight)
-                )
-
-                // Dibujar etiquetas de hora abajo (01h, 05h...)
-                if (index % 4 == 0) {
-                    drawText(
-                        textMeasurer = textMeasurer,
-                        text = bar.label,
-                        style = labelStyle,
-                        topLeft = Offset(x, chartHeight + 5f)
+                    // Rectangular bar rendering
+                    drawRect(
+                        color = if (bar.isPrediction) predictionColor else historyColor,
+                        topLeft = Offset(x, chartHeight - barHeight),
+                        size = Size(
+                            width = if (bar.isPrediction) barWidth + barSpacing else barWidth,
+                            height = barHeight
+                        )
                     )
+
+                    // Draw X-Axis Time Labels (Interval-based to avoid overlapping)
+                    if (index % 4 == 0) {
+                        drawText(
+                            textMeasurer = textMeasurer,
+                            text = bar.label,
+                            style = labelStyle,
+                            topLeft = Offset(x, chartHeight + 8f)
+                        )
+                    }
                 }
 
-                usualChargingPoint?.let {  point ->
-                    val barspacing = 4.dp.toPx()
-                    val barWidth = (chartWidth / data.size) - barSpacing
+                // --- 3. Render the Usual Charging Point Indicator ---
+                usualChargingPoint?.let { point ->
+                    // Guard check to ensure the index is within bounds of current data display
+                    if (point.barIndex < data.size) {
+                        val pointX = paddingLeft + (point.barIndex * (barWidth + barSpacing)) + (barWidth / 2)
+                        val pointY = chartHeight - (point.batteryLevel / 100f * chartHeight)
 
-                    //calculamos la posicion x basada en el indice de la barra
-                    val x =  paddingLeft + (point.barIndex * (barWidth + barSpacing)) + (barWidth / 2)
-                    //val y = chartHeight - (point.batteryLevel / 100f) * chartHeight
-                    val y = chartHeight - (point.batteryLevel / 100f * chartHeight)
-
-                    drawCircle(
-                        color = Color(0xFF0097A7), //turquesa oscuro
-                        radius = 6.dp.toPx(),
-                        center = Offset(x, y),
-                        style = Stroke(width = 2.dp.toPx())
-                    )
-                    // Círculo interior (Fondo que se adapta al tema)
-                    drawCircle(
-                        color = surfaceColor,
-                        radius = 4.dp.toPx(),
-                        center = Offset(x, y)
-                    )
+                        // Outer turquoise ring
+                        drawCircle(
+                            color = Color(0xFF0097A7),
+                            radius = 6.dp.toPx(),
+                            center = Offset(pointX, pointY),
+                            style = Stroke(width = 2.dp.toPx())
+                        )
+                        // Inner core blending with background
+                        drawCircle(
+                            color = surfaceColor,
+                            radius = 4.dp.toPx(),
+                            center = Offset(pointX, pointY)
+                        )
+                    }
                 }
             }
         }

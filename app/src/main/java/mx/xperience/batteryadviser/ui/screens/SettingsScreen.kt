@@ -1,3 +1,8 @@
+/*
+ * Copyright (C) 2025 The XPerience Project
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package mx.xperience.batteryadviser.ui.screens
 
 import androidx.compose.foundation.clickable
@@ -11,6 +16,13 @@ import androidx.compose.ui.unit.dp
 import mx.xperience.batteryadviser.ui.settings.SettingsViewModel
 import mx.xperience.batteryadviser.ui.theme.ThemeMode
 
+/**
+ * Screen for managing application preferences.
+ * Includes theme selection and notification toggles.
+ *
+ * @param viewModel ViewModel handling the logic for settings.
+ * @param onBack Callback to navigate back to the previous screen.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
@@ -26,44 +38,33 @@ fun SettingsScreen(
                 title = { Text("Settings") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = null)
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Navigate back")
                     }
                 }
             )
         }
     ) { padding ->
-
         Column(
             modifier = Modifier
                 .padding(padding)
                 .fillMaxWidth()
         ) {
-
+            // Theme Section
             Text(
-                "Theme",
+                text = "Theme",
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.padding(16.dp)
             )
 
-            ThemeOption(
-                title = "Light",
-                selected = themeMode == ThemeMode.LIGHT
-            ) { viewModel.setThemeMode(ThemeMode.LIGHT) }
-
-            ThemeOption(
-                title = "Dark",
-                selected = themeMode == ThemeMode.DARK
-            ) { viewModel.setThemeMode(ThemeMode.DARK) }
-
-            ThemeOption(
-                title = "Dark (AMOLED)",
-                selected = themeMode == ThemeMode.AMOLED
-            ) { viewModel.setThemeMode(ThemeMode.AMOLED) }
+            ThemeOption("Light", themeMode == ThemeMode.LIGHT) { viewModel.setThemeMode(ThemeMode.LIGHT) }
+            ThemeOption("Dark", themeMode == ThemeMode.DARK) { viewModel.setThemeMode(ThemeMode.DARK) }
+            ThemeOption("Dark (AMOLED)", themeMode == ThemeMode.AMOLED) { viewModel.setThemeMode(ThemeMode.AMOLED) }
 
             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
+            // Notifications Section
             Text(
-                "Notifications",
+                text = "Notifications",
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.padding(16.dp),
                 color = MaterialTheme.colorScheme.primary
@@ -80,7 +81,7 @@ fun SettingsScreen(
                 Column(modifier = Modifier.weight(1f)) {
                     Text("Charge Reminder", style = MaterialTheme.typography.bodyLarge)
                     Text(
-                        "Notify if battery won't reach your usual charge time",
+                        text = "Notify if battery won't reach your usual charge time",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -90,24 +91,28 @@ fun SettingsScreen(
                     onCheckedChange = { viewModel.toggleNotifyCharge(it) }
                 )
             }
-            /*Button(
+
+            // Diagnostic/Test Action
+            Button(
                 onClick = { viewModel.sendTestNotification() },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp),
-                // Solo habilitamos el botón si las notificaciones están ON en el switch
                 enabled = notifyEnabled,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.secondaryContainer,
                     contentColor = MaterialTheme.colorScheme.onSecondaryContainer
                 )
             ) {
-                Text("Test Notification")
-            }*/
+                Text("Send Test Notification")
+            }
         }
     }
 }
 
+/**
+ * Reusable row component for theme selection.
+ */
 @Composable
 private fun ThemeOption(
     title: String,
@@ -122,9 +127,6 @@ private fun ThemeOption(
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Text(title)
-        RadioButton(
-            selected = selected,
-            onClick = null
-        )
+        RadioButton(selected = selected, onClick = null)
     }
 }

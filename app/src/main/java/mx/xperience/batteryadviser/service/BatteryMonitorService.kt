@@ -1,3 +1,8 @@
+/*
+ * Copyright (C) 2025 The XPerience Project
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package mx.xperience.batteryadviser.service
 
 import android.app.Notification
@@ -12,128 +17,163 @@ import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.first
-import mx.xperience.batteryadviser.R
 import mx.xperience.batteryadviser.data.db.BatteryDatabase
-import mx.xperience.batteryadviser.data.db.BatteryEntry
 import mx.xperience.batteryadviser.data.BatteryLogic
-import mx.xperience.batteryadviser.data.BatteryRepository
 import mx.xperience.batteryadviser.data.SettingsDataStore
-import java.util.concurrent.TimeUnit
+import java.util.Calendar
 
+/**
+ * Foreground service responsible for continuous battery monitoring and predictive alerts.
+ * This service ensures that the application can track power consumption even when
+ * the UI is not in the foreground, complying with Android 15 foreground service requirements.
+ */
 class BatteryMonitorService : Service() {
+
     private lateinit var db: BatteryDatabase
     private lateinit var settingsDataStore: SettingsDataStore
-    private val serviceScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private lateinit var batteryManager: BatteryManager
-    private lateinit var repository: BatteryRepository // Reutilizamos tu repo de Room
+
+    // SupervisorJob ensures that a failure in one child coroutine doesn't kill the entire scope
+    private val serviceScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+
     private val CHANNEL_ID = "battery_monitor_channel"
+    private val NOTIFICATION_ID_PERSISTENT = 1
+    private val NOTIFICATION_ID_WARNING = 2
 
-    override fun onCreate(){
+    /**
+     * Initializes core components. Called once when the service is created.
+     */
+    override fun onCreate() {
         super.onCreate()
-
         db = BatteryDatabase.getDatabase(this)
         settingsDataStore = SettingsDataStore(this)
         batteryManager = getSystemService(Context.BATTERY_SERVICE) as BatteryManager
         createNotificationChannel()
     }
 
+    /**
+     * Entry point for the service. Initiates foreground state and telemetry tracking.
+     */
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-
-        // Creamos la notificación obligatoria para Android 15
         val notification = createPersistentNotification()
 
-        // En Android 14/15, startForeground debe ir acompañado del tipo de servicio si se declaró en el manifest
+        // Required for Android 10+ and specifically enforced in Android 14/15
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            startForeground(1, notification, android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE)
+            startForeground(
+                NOTIFICATION_ID_PERSISTENT,
+                notification,
+                android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
+            )
         } else {
-            startForeground(1, notification)
+            startForeground(NOTIFICATION_ID_PERSISTENT, notification)
         }
 
-        startTracking()
+        startTrackingLoop()
+
+        // START_STICKY ensures the system attempts to recreate the service if it's killed by memory pressure
         return START_STICKY
     }
 
-    private fun startTracking() {
+    /**
+     * Main telemetry loop. Polls battery hardware properties every 5 seconds.
+     */
+    private fun startTrackingLoop() {
         serviceScope.launch {
             while (isActive) {
-                val rawCurrent = batteryManager.getLongProperty(BatteryManager.BATTERY_PROPERTY_CURRENT_NOW).toDouble()
-                val currentMA = BatteryLogic.getRealCurrentMA(rawCurrent)
-                val percent = batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)
+                try {
+                    val rawCurrent = batteryManager.getLongProperty(BatteryManager.BATTERY_PROPERTY_CURRENT_NOW).toDouble()
+                    val currentMA = BatteryLogic.getRealCurrentMA(rawCurrent)
+                    val percent = batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)
 
-                // Guardar en Room si el porcentaje cambió (lógica compartida)
-                // repository.saveIfChanged(percent)
+                    // Execute predictive logic to determine if the user needs a charge reminder
+                    checkUsualChargePrediction(percent, currentMA)
 
-                // Lógica de Notificación de "Carga Usual"
-                checkUsualChargePrediction(percent, currentMA)
-
-                delay(5000) // En background 5 seg es suficiente para ahorrar batería
+                } catch (e: Exception) {
+                    // Prevent the loop from crashing due to unexpected hardware read errors
+                }
+                delay(5000)
             }
         }
     }
 
-    private fun createPersistentNotification(): Notification {
-        // Aquí va el NotificationChannel (necesario para Android 8+)
-        // Y el NotificationCompat.Builder
-        return NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("Battery Adviser Activo")
-            .setContentText("Monitoreando consumo en tiempo real")
-            .setSmallIcon(/*R.drawable.ic_battery_bolt*/android.R.drawable.ic_dialog_info)
-            .setOngoing(true)
-            .build()
-    }
-
-    private fun createNotificationChannel() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val serviceChannel = NotificationChannel(
-                CHANNEL_ID,
-                "Monitoreo de Batería",
-                NotificationManager.IMPORTANCE_LOW // Low para que no haga ruido cada 5 segundos
-            )
-            val manager = getSystemService(NotificationManager::class.java)
-            manager.createNotificationChannel(serviceChannel)
-        }
-    }
-
+    /**
+     * Analyzes current discharge rates against historical charging habits.
+     * Triggers a high-priority notification if the device won't last until the usual charge time.
+     */
     private fun checkUsualChargePrediction(percent: Int, currentMA: Double) {
         serviceScope.launch {
+            // Respect user preference from DataStore
             val isEnabled = settingsDataStore.notifyChargeEnabled.first()
             if (!isEnabled) return@launch
 
-            // Obtener la hora promedio de carga del DAO
-            val avgChargeHour = db.batteryDao().getAverageChargeHour() ?: 22.0 // 10 PM por defecto
+            // Retrieve the statistically calculated average charge hour (default to 10 PM)
+            val avgChargeHour = db.batteryDao().getAverageChargeHour() ?: 22.0
 
-            // Calcular cuánto tiempo queda (Reutilizando BatteryLogic)
-            // Usa una capacidad genérica o la que detectamos ayer (p.ej. 5000.0)
+            // Estimation based on current discharge rate and a standard 5000mAh capacity
             val hoursRemaining = BatteryLogic.calculateHoursRemaining(percent, currentMA, 5000.0)
 
-            // Ver a qué hora se apagaría el cel
-            val currentHour = java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY)
+            val currentHour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
             val shutDownHour = (currentHour + hoursRemaining) % 24
 
-            // COMPARACIÓN: Si se apaga antes de la hora usual de carga
+            // Logic: If predicted shutdown occurs before the usual charge time and battery is below 50%
             if (shutDownHour < avgChargeHour && percent < 50) {
-                // AQUÍ: Deberías checar el Switch de ajustes antes de lanzar
                 showWarningNotification(avgChargeHour)
             }
         }
     }
 
+    /**
+     * Creates the mandatory persistent notification for Foreground Services.
+     */
+    private fun createPersistentNotification(): Notification {
+        return NotificationCompat.Builder(this, CHANNEL_ID)
+            .setContentTitle("Battery Adviser Active")
+            .setContentText("Monitoring real-time power consumption")
+            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setOngoing(true) // Prevents user from swiping it away
+            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .setCategory(Notification.CATEGORY_SERVICE)
+            .build()
+    }
+
+    /**
+     * Dispatches a high-priority alert to the user.
+     */
     private fun showWarningNotification(usualHour: Double) {
         val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         val warningNote = NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.stat_sys_warning)
-            .setContentTitle("¡Aviso de Batería!")
-            .setContentText("No llegarás a tu hora habitual de carga (${usualHour.toInt()}:00).")
+            .setContentTitle("Battery Alert!")
+            .setContentText("Battery won't reach your usual charge time (${usualHour.toInt()}:00).")
             .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setDefaults(Notification.DEFAULT_ALL)
             .build()
 
-        manager.notify(2, warningNote) // ID 2 para no pisar la notificación persistente
+        manager.notify(NOTIFICATION_ID_WARNING, warningNote)
+    }
+
+    /**
+     * Configures the system notification channel required for Android 8.0+.
+     */
+    private fun createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val serviceChannel = NotificationChannel(
+                CHANNEL_ID,
+                "Battery Monitoring Service",
+                NotificationManager.IMPORTANCE_LOW
+            ).apply {
+                description = "Provides real-time battery analytics and predictive alerts"
+            }
+            val manager = getSystemService(NotificationManager::class.java)
+            manager.createNotificationChannel(serviceChannel)
+        }
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        serviceScope.cancel() // Limpiamos las corrutinas al cerrar el servicio
+        // Critical: Stop all background work when the service is destroyed to prevent memory leaks
+        serviceScope.cancel()
     }
 
-    override fun onBind(intent: Intent?) = null
+    override fun onBind(intent: Intent?): IBinder? = null
 }

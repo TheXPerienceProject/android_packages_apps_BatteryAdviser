@@ -1,3 +1,8 @@
+/*
+ * Copyright (C) 2025 The XPerience Project
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package mx.xperience.batteryadviser.data
 
 import kotlinx.coroutines.flow.map
@@ -6,33 +11,31 @@ import mx.xperience.batteryadviser.ui.components.BatteryBar
 import java.text.SimpleDateFormat
 import java.util.*
 
-/*class BatteryRepository(private val batteryDao: BatteryDao) {
-    val chartData = batteryDao.getRecentHistory().map { entries ->
-        entries.reversed().map {
-            val hour = SimpleDateFormat("HH'h'", Locale.getDefault()).format(Date(it.timestamp))
-            BatteryBar(
-                value = it.level,
-                label = hour,
-                isPrediction = it.isPrediction
-            )
-        }
-    }
-}*/
+/**
+ * Repository pattern implementation to abstract the data source from the UI.
+ * Handles transformation of Database Entities into UI-ready models.
+ */
 class BatteryRepository(private val batteryDao: BatteryDao) {
+
+    /**
+     * Converts raw database entries into a formatted list for the chart component.
+     * Filters and sorts data chronologically to ensure a clear historical trend.
+     */
     val chartData = batteryDao.getRecentHistory().map { entries ->
         if (entries.isEmpty()) {
             emptyList<BatteryBar>()
         } else {
-            // Ordenamos cronológicamente (Pasado -> Presente)
-            entries.sortedBy { it.timestamp }.takeLast(10) //limitamos a 10 barras para mantener clean
-                .map {
-                val hour = SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date(it.timestamp))
-                BatteryBar(
-                    value = it.level,
-                    label = hour,
-                    isPrediction = it.isPrediction
-                )
-            }
+            // Sort by timestamp (Past -> Present) and limit to the last 10 samples for UI clarity
+            entries.sortedBy { it.timestamp }
+                .takeLast(10)
+                .map { entry ->
+                    val hourLabel = SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date(entry.timestamp))
+                    BatteryBar(
+                        value = entry.level.toFloat(),
+                        label = hourLabel,
+                        isPrediction = entry.isPrediction
+                    )
+                }
         }
     }
 }
